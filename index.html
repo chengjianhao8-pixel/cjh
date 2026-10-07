@@ -141,7 +141,6 @@
   .cargo-orb.pos { background: linear-gradient(135deg, #fb7185, #e11d48); }
   .cargo-orb.neg { background: linear-gradient(135deg, #60a5fa, #2563eb); }
 
-  /* ★ 两张图片叠在一起，用透明度切换朝向 */
   .truck-img-wrap {
     position: relative;
     width: 80px;
@@ -167,7 +166,6 @@
     top: 0; left: 0;
     opacity: 0;
   }
-  /* 切换朝向 */
   .truck-img-wrap.face-left .face-right { opacity: 0; }
   .truck-img-wrap.face-left .face-left  { opacity: 1; }
 
@@ -225,18 +223,14 @@
   }
   @media (max-width: 620px) { .boom-center { font-size: 220px; } }
 
-  .truck-stage.cargo-gone .cargo-above {
-    opacity: 0;
-  }
+  .truck-stage.cargo-gone .cargo-above { opacity: 0; }
 
   .truck-stage.trucks-deleted .truck-unit {
     opacity: 0;
     transform: translateX(0) scale(.9);
     transition: opacity .4s ease, transform .4s ease;
   }
-  .truck-stage.trucks-deleted .cargo-above {
-    opacity: 0;
-  }
+  .truck-stage.trucks-deleted .cargo-above { opacity: 0; }
 
   .product-top {
     position: absolute;
@@ -382,7 +376,7 @@
   <section class="card">
     <h2><span class="num">1</span>先回忆：什么是电离方程式</h2>
     <p>想搞明白离子方程式，实际上，我们得先从<span class="hl">电离方程式</span>以及<span class="hl">离子共存</span>入手。</p>
-    <p>一般情况下，酸、碱、盐等电解质溶于水后，会<span class="hl">电离出自由移动的阴、阳离子</span>,为了了解这个物质的性质或者说组成，我们就把它的阴阳离子拆开来写——这就是电离方程式。</p>
+    <p>一般情况下，<span class="hl">酸、碱、盐及其他电解质</span>都是由阴阳离子结合而成的。为了了解这个物质的性质或者说组成，我们就把它的阴阳离子拆开来写——这就是电离方程式。</p>
     <div class="formula-static">
       H<sub>2</sub>SO<sub>4</sub>
       <span class="eq">=</span>
@@ -429,7 +423,7 @@
       <button class="btn btn-primary" id="nextBtn">下一步 ▶</button>
       <button class="btn btn-ghost" id="replayBtn">↺ 重播</button>
     </div>
-    <div class="chant">下标写前，再叉上，前正后负不能忘</div>
+    <div class="chant">下标写，上标交叉写</div>
   </section>
 
   <section class="card">
@@ -604,6 +598,23 @@ const BEAKERS = {
   ]}
 };
 
+/* ===== 音效 ===== */
+const SFX = {};
+['crash','success','fail'].forEach(name => {
+  const a = new Audio(name + '.mp3');
+  a.preload = 'auto';
+  SFX[name] = a;
+});
+function playSfx(name, volume){
+  const base = SFX[name];
+  if (!base) return;
+  try {
+    const a = base.cloneNode(true);
+    a.volume = volume != null ? volume : 0.7;
+    a.play().catch(()=>{});
+  } catch(e){}
+}
+
 (function(){
   /* ===== 交叉法 ===== */
   const stage = document.getElementById('stage');
@@ -690,7 +701,7 @@ const BEAKERS = {
     }
   ];
   const narrations = [
-    '这是硫酸：<strong>H₂SO₄</strong>。它溶于水后，会电离出 H⁺ 和 SO₄²⁻。',
+    '这是硫酸：<strong>H₂SO₄</strong>。酸、碱、盐大多是阴阳离子结合而成的。',
     '注意看：硫酸根（SO₄）下面其实藏着一个 <span class="amber">1</span>，只是平时被我们省略了。',
     '把氢下面的 <span class="amber">2</span> 交叉写到硫酸根右上角 → <strong>SO₄²⁻</strong>。',
     '把被省略的 <span class="amber">1</span> 交叉写到氢右上角 → H¹⁺；但 1 也要省略，只剩一个 <strong>+</strong>。',
@@ -843,7 +854,7 @@ const BEAKERS = {
     });
   });
 
-  /* ===== 前后摆动：左右往返，方向切换时换图 ===== */
+  /* ===== 前后摆动 ===== */
   function startSwaying(unit){
     if (!unit) return;
     const wrap = unit.querySelector('.truck-img-wrap');
@@ -852,22 +863,19 @@ const BEAKERS = {
 
     wrap.style.animation = 'none';
 
-    const range = 36;       // 摆幅（像素）
-    const period = 3400;    // 一个完整来回
+    const range = 36;
+    const period = 3400;
     const start = performance.now();
     let rafId = null;
 
     function frame(now){
-      const t = ((now - start) % period) / period;   // 0 → 1
-      // x = -sin(2πt) * range：t=0 时 0，t=0.25 时 -range（最左），t=0.75 时 +range（最右）
+      const t = ((now - start) % period) / period;
       const x = -Math.sin(t * Math.PI * 2) * range;
-      // 轻微的上下起伏
       const y = Math.sin(t * Math.PI * 4) * 2;
-      // 速度方向：dx/dt ∝ -cos(2πt)；<0 表示朝左移动
       const vel = -Math.cos(t * Math.PI * 2);
 
-      if (vel < 0) wrap.classList.add('face-left');    // 朝左开 → 用左图
-      else wrap.classList.remove('face-left');          // 朝右开 → 用右图
+      if (vel < 0) wrap.classList.add('face-left');
+      else wrap.classList.remove('face-left');
 
       wrap.style.transform = `translate(${x}px, ${y}px)`;
       rafId = requestAnimationFrame(frame);
@@ -880,14 +888,12 @@ const BEAKERS = {
       wrap.style.animation = '';
     };
   }
-
   function stopSwaying(unit){
     if (!unit) return;
     if (unit._swayCleanup){
       unit._swayCleanup();
       delete unit._swayCleanup;
     }
-    // 恢复初始朝向：pos 朝右（面向对方），neg 朝左（面向对方）
     const wrap = unit.querySelector('.truck-img-wrap');
     if (wrap){
       if (unit.dataset.side === 'neg') wrap.classList.add('face-left');
@@ -917,12 +923,10 @@ const BEAKERS = {
         Ba: { ok:true,  tag:'Ba²⁺', msg:'✓ BaCl₂ 可溶——能开动' }
       }
     };
-
     const FULL = {
       'NO3-Na': { react:'AgNO<sub>3</sub> + NaCl', prod:'AgCl<sub>↓</sub> + NaNO<sub>3</sub>', ion:'AgCl<sub>↓</sub>' },
       'NO3-Ba': { react:'2AgNO<sub>3</sub> + BaCl<sub>2</sub>', prod:'2AgCl<sub>↓</sub> + Ba(NO<sub>3</sub>)<sub>2</sub>', ion:'AgCl<sub>↓</sub>' }
     };
-
     const state = { pos:null, neg:null };
     let reactionTimers = [];
 
@@ -930,7 +934,6 @@ const BEAKERS = {
       reactionTimers.forEach(t => clearTimeout(t));
       reactionTimers = [];
     }
-
     function clearCrash(){
       clearReaction();
       stageEl.classList.remove('crash-mode','cargo-gone');
@@ -949,20 +952,29 @@ const BEAKERS = {
       clearCrash();
       stageEl.classList.add('crash-mode');
 
-      // 0.75s 贴合 → 大爆炸
-      reactionTimers.push(setTimeout(() => boomCenter.classList.add('show'), 750));
+      // 0.75s 相撞 → 大爆炸 + crash 音效
+      reactionTimers.push(setTimeout(() => {
+        boomCenter.classList.add('show');
+        playSfx('crash', 0.85);
+      }, 750));
+
       // 1.05s 卸货
       reactionTimers.push(setTimeout(() => stageEl.classList.add('cargo-gone'), 1050));
+
       // 1.9s 爆炸消散
       reactionTimers.push(setTimeout(() => boomCenter.classList.remove('show'), 1900));
-      // 2.0s 显示产物
+
+      // 2.0s 产物出现 + success 音效
       reactionTimers.push(setTimeout(() => {
         productTop.innerHTML = productHTML;
         productTop.classList.add('show');
+        playSfx('success', 0.7);
       }, 2000));
-      // 2.4s 撤掉 crash-mode（车平滑归位）
+
+      // 2.4s 撤掉 crash-mode
       reactionTimers.push(setTimeout(() => stageEl.classList.remove('crash-mode'), 2400));
-      // 3.4s 车归位后，开始前后摆动
+
+      // 3.4s 摆动
       reactionTimers.push(setTimeout(() => {
         const uPos = section.querySelector('.truck-unit[data-side="pos"]');
         const uNeg = section.querySelector('.truck-unit[data-side="neg"]');
@@ -1017,7 +1029,6 @@ const BEAKERS = {
             const k = state.pos + '-' + state.neg;
             const full = FULL[k];
             if (full){
-              // 0.7s 抖动完 → 直接相撞
               reactionTimers.push(setTimeout(() => runCrash5(full.ion), 700));
             }
           }
@@ -1035,6 +1046,7 @@ const BEAKERS = {
           setTimeout(() => {
             void boomLocal.offsetWidth;
             boomLocal.classList.add('show');
+            playSfx('fail', 0.8);                       // ★ 失败音效
             setTimeout(() => unit.classList.add('boom'), 350);
             setTimeout(() => {
               prodLocal.innerHTML = (info.tag === 'Cl⁻' || info.tag === 'Ag⁺') ? 'AgCl<sub>↓</sub>' : 'Ag₂SO₄<sub>↓</sub>';
@@ -1077,7 +1089,6 @@ const BEAKERS = {
       Cu:  { name:'CuSO₄', tag:'Cu²⁺' },
       Na:  { name:'Na₂SO₄', tag:'Na⁺' }
     };
-
     const FULL = {
       'OH-Cu':  {
         react:'Ba(OH)<sub>2</sub> + CuSO<sub>4</sub>',
@@ -1090,7 +1101,6 @@ const BEAKERS = {
       'NO3-Cu': { react:'Ba(NO<sub>3</sub>)<sub>2</sub> + CuSO<sub>4</sub>', prod:'BaSO<sub>4</sub>↓ + Cu(NO<sub>3</sub>)<sub>2</sub>', isCrash:false, cargoProd:'BaSO<sub>4</sub>↓' },
       'NO3-Na': { react:'Ba(NO<sub>3</sub>)<sub>2</sub> + Na<sub>2</sub>SO<sub>4</sub>',prod:'BaSO<sub>4</sub>↓ + 2NaNO<sub>3</sub>',  isCrash:false, cargoProd:'BaSO<sub>4</sub>↓' }
     };
-
     const state2 = { pos:null, neg:null };
     let reactionTimers = [];
 
@@ -1098,7 +1108,6 @@ const BEAKERS = {
       reactionTimers.forEach(t => clearTimeout(t));
       reactionTimers = [];
     }
-
     function clearCrash(){
       clearReaction();
       stageEl.classList.remove('crash-mode','cargo-gone','trucks-deleted');
@@ -1114,8 +1123,11 @@ const BEAKERS = {
       clearCrash();
       stageEl.classList.add('crash-mode');
 
-      // 0.75s 大爆炸
-      reactionTimers.push(setTimeout(() => boomCenter.classList.add('show'), 750));
+      // 0.75s 大爆炸 + crash 音效
+      reactionTimers.push(setTimeout(() => {
+        boomCenter.classList.add('show');
+        playSfx('crash', 0.85);
+      }, 750));
 
       if (isTruckCrash){
         reactionTimers.push(setTimeout(() => stageEl.classList.add('trucks-deleted'), 1050));
@@ -1131,16 +1143,15 @@ const BEAKERS = {
           productTop.classList.add('show');
           productCenter.innerHTML = cargoHTML;
           productCenter.classList.add('show');
+          playSfx('success', 0.7);                       // ★ 成功音效
         }, 2000));
-        // 货车被删了，不需要摆动
       } else {
         reactionTimers.push(setTimeout(() => {
           productCenter.innerHTML = cargoHTML;
           productCenter.classList.add('show');
+          playSfx('success', 0.7);                       // ★ 成功音效
         }, 2000));
-        // 归位
         reactionTimers.push(setTimeout(() => stageEl.classList.remove('crash-mode'), 2400));
-        // 前后摆动
         reactionTimers.push(setTimeout(() => {
           const uPos = sec2.querySelector('.truck-unit[data-side="pos"]');
           const uNeg = sec2.querySelector('.truck-unit[data-side="neg"]');
@@ -1162,8 +1173,6 @@ const BEAKERS = {
       if (!full) return;
 
       clearCrash();
-
-      // 0.7s 抖动完 → 直接进入相撞动画
       reactionTimers.push(setTimeout(() => {
         runReaction6(full.isCrash, full.truckProd, full.cargoProd);
       }, 700));
