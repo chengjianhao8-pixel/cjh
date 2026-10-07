@@ -1143,13 +1143,13 @@ function playSfx(name, volume){
           productTop.classList.add('show');
           productCenter.innerHTML = cargoHTML;
           productCenter.classList.add('show');
-          playSfx('success', 0.7);                       // ★ 成功音效
+          playSfx('fail', 0.7);                       // ★ 成功音效
         }, 2000));
       } else {
         reactionTimers.push(setTimeout(() => {
           productCenter.innerHTML = cargoHTML;
           productCenter.classList.add('show');
-          playSfx('fail', 0.7);                       // ★ 成功音效
+          playSfx('success', 0.7);                       // ★ 成功音效
         }, 2000));
         reactionTimers.push(setTimeout(() => stageEl.classList.remove('crash-mode'), 2400));
         reactionTimers.push(setTimeout(() => {
